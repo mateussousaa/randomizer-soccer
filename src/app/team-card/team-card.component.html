@@ -1,0 +1,11 @@
+<div class="team-card bg-slate-300 p-6 shadow-sm rounded-lg">
+  <div class="bg-transparent w-36 h-36 mx-auto">
+    <img [src]="teamData.crest" class="object-contain w-full h-full">
+  </div>
+  <div class="team-info pt-12 flex flex-col gap-6 items-center">
+    <p class="team-name font-bold">{{ teamData.name }}</p>
+    <p class="team-league font-bold">{{ teamData.league }}</p>
+    <p class="team-country font-bold">{{ teamData.country }}</p>
+    <p class="team-position font-bold">Position: {{ teamData.position }}</p>
+  </div>
+</div>
