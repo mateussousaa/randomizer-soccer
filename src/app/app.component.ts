@@ -95,6 +95,9 @@ export class AppComponent implements OnInit {
     const standingPDData: StandingData = await this.fetchStandingByLeagueCode(
       'PD'
     );
+
+    console.log('standingPDData', standingPDData)
+
     const standingPLData: StandingData = await this.fetchStandingByLeagueCode(
       'PL'
     );

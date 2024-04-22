@@ -14,7 +14,7 @@ export class StandingsService {
   }
 
   getStanding(leagueCode: string): Observable<StandingData> {
-    const endpoint = `/api/competitions/${leagueCode}/standings`
+    const endpoint = `/competitions/${leagueCode}/standings`
 
     return this.httpClient.get<StandingData>(endpoint, {
       headers: {
