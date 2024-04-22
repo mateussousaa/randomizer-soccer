@@ -91,12 +91,9 @@ export class AppComponent implements OnInit {
   }
 
   async getTeamsByRequest() {
-    console.log('external request');
     const standingPDData: StandingData = await this.fetchStandingByLeagueCode(
       'PD'
     );
-
-    console.log('standingPDData', standingPDData)
 
     const standingPLData: StandingData = await this.fetchStandingByLeagueCode(
       'PL'
