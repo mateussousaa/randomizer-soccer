@@ -41,8 +41,6 @@ function App() {
         const validResponses = responses.filter((response) => response.ok);
         const data: StandingResponse[] = await Promise.all(validResponses.map((response) => response.json()));
 
-        console.log(data)
-  
         const allTeams = data.flatMap((standing) => {
           const limit = availableLeagues.find(x => x.league === standing.competition.code)?.limit
           return formatTeams(standing, limit)

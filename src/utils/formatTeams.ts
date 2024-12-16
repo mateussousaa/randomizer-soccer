@@ -6,8 +6,6 @@ export function formatTeams(standing: StandingResponse, limit: number = 5): Team
     const league = standing.competition.name;
     const country = standing.area.name;
 
-    console.log(limit)
-
     return teams.map((x) =>
       teamDto({
         teamPayload: x.team,
