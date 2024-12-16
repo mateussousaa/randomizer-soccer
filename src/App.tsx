@@ -1,71 +1,101 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import "./App.css";
 
-import './App.css';
-
-import { standingMock } from './mock/standing';
-import { StandingResponse } from './types/standing';
-
-// PD - Espanha
-// PL - Inglaterra
-// SA - Italia
-// FL1 - França
-// PPL - Portugal
-// BL1 - Alemanha
-// DED - Holanda
+import { TeamCard } from "./components/teamCard/teamCard";
+import { firstTeamMock, secondTeamMock } from "./mock/teams";
+import { StandingResponse } from "./types/standing";
+import { TeamDto } from "./types/teams";
+import { fetchLeagueData } from "./utils/fetch";
+import { formatTeams } from "./utils/formatTeams";
+import { availableLeagues } from "./utils/leagues";
+import { randomTeams } from "./utils/randomTeams";
 
 function App() {
-  const [standings, setStandings] = useState<StandingResponse | null>(null);
+  const [teams, setTeams] = useState<TeamDto[]>([]);
+  const [firstTeam, setFirstTeam] = useState<TeamDto>(firstTeamMock);
+  const [secondTeam, setSecondTeam] = useState<TeamDto>(secondTeamMock);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStandings = async () => {
+      const localData = localStorage.getItem('data');
+      const currentDate = new Date();
+      const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+  
       try {
-        // const CORS_URL = import.meta.env.VITE_CORS_URL
-        // const API_URL = import.meta.env.VITE_API_URL
-        // const API_TOKEN = import.meta.env.VITE_API_TOKEN
-
-        // await fetch(`${CORS_URL}${API_URL}competitions/PL/standings`, {
-        //   headers: {
-        //     'X-Auth-Token': API_TOKEN, // Substitua com seu token
-        //   },
-        // });
-
-        const response = {
-          ok: true, // Indica que a resposta foi bem-sucedida
-          json: async () => standingMock, // Retorna o mock como resposta JSON
-        };
-
-        // Em vez de fazer o fetch real, usamos o objeto response simulado
-        if (!response.ok) {
-          throw new Error('Erro ao buscar dados');
+        if (localData) {
+          const parsedData = JSON.parse(localData);
+          const lastRequestDate = new Date(parsedData.requestDate);
+  
+          const timeDifference = currentDate.getTime() - lastRequestDate.getTime();
+  
+          if (timeDifference <= oneDayInMilliseconds) {
+            setTeams(parsedData.teams);
+            console.log('cache')
+            return;
+          }
         }
+  
+        const responses = await Promise.all(availableLeagues.map(x => fetchLeagueData(x.league)));
+        const validResponses = responses.filter((response) => response.ok);
+        const data: StandingResponse[] = await Promise.all(validResponses.map((response) => response.json()));
 
-        const data = await response.json();
-        setStandings(data);
+        console.log(data)
+  
+        const allTeams = data.flatMap((standing) => {
+          const limit = availableLeagues.find(x => x.league === standing.competition.code)?.limit
+          return formatTeams(standing, limit)
+        });
+  
+        localStorage.setItem(
+          'data',
+          JSON.stringify({ requestDate: currentDate, teams: allTeams })
+        );
+  
+        setTeams(allTeams);
+  
       } catch (error: unknown) {
-        if (error instanceof Error) {
-          setError(error.message);
-        } else {
-          setError('Erro desconhecido');
-        }
+        console.error(error);
+        setError("Erro ao buscar os dados das ligas.");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchData();
+  
+    fetchStandings();
   }, []);
+  
+
+  const randomizeTeams = () => {
+    if (teams.length >= 2) {
+      const [firstTeam, secondTeam] = randomTeams(teams)
+      setFirstTeam(firstTeam);
+      setSecondTeam(secondTeam);
+    }
+  };
 
   if (loading) return <h1>Carregando...</h1>;
   if (error) return <h1>Erro: {error}</h1>;
 
   return (
-    <>
-      <h1>Randomizer Soccer</h1>
-      <pre>{JSON.stringify(standings, null, 2)}</pre>
-    </>
-  );
+    <div className="app-container">
+      <div className="logo-container">
+        <img src="assets/logo.png" alt="Randomizer Soccer Logo" className="app-logo" />
+      </div>
+      <div className="teams-container">
+        <div className="team-half">
+          <TeamCard team={firstTeam} />
+        </div>
+        <div className="team-half">
+          <TeamCard team={secondTeam} />
+        </div>
+      </div>
+      <button className="randomize-button" onClick={randomizeTeams}>
+        Go
+      </button>
+    </div>
+  );  
 }
 
 export default App;
